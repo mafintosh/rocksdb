@@ -47,6 +47,10 @@
 #include <set>
 #include <vector>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #include "env/composite_env_wrapper.h"
 #include "env/io_posix.h"
 #include "monitoring/iostats_context_imp.h"
@@ -94,6 +98,11 @@ struct LockHoldingInfo {
 static std::map<std::string, LockHoldingInfo> locked_files;
 static port::Mutex mutex_locked_files;
 
+#if defined(TARGET_OS_IPHONE)
+static int LockOrUnlock(int fd, bool lock) {
+  return 0;
+}
+#else
 static int LockOrUnlock(int fd, bool lock) {
   errno = 0;
   struct flock f;
@@ -106,6 +115,7 @@ static int LockOrUnlock(int fd, bool lock) {
 
   return value;
 }
+#endif
 
 class PosixFileLock : public FileLock {
  public:
